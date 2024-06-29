@@ -12,6 +12,10 @@ from PIL import Image
 import io
 import re
 from anthropic import Anthropic
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Initialize colorama
 init()
@@ -27,10 +31,10 @@ CONTINUATION_EXIT_PHRASE = "AUTOMODE_COMPLETE"
 MAX_CONTINUATION_ITERATIONS = 25
 
 # Initialize the Anthropic client
-client = Anthropic(api_key="YOUR API KEY")
+client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 # Initialize the Tavily client
-tavily = TavilyClient(api_key="YOUR API KEY")
+tavily = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
 
 # Set up the conversation memory
 conversation_history = []
@@ -90,7 +94,6 @@ When in automode:
 Answer the user's request using relevant tools (if they are available). Before calling a tool, do some analysis within <thinking></thinking> tags. First, think about which of the provided tools is the relevant tool to answer the user's request. Second, go through each of the required parameters of the relevant tool and determine if the user has directly provided or given enough information to infer a value. When deciding if the parameter can be inferred, carefully consider all the context to see if it supports a specific value. If all of the required parameters are present or can be reasonably inferred, close the thinking tag and proceed with the tool call. BUT, if one of the values for a required parameter is missing, DO NOT invoke the function (not even with fillers for the missing params) and instead, ask the user to provide the missing parameters. DO NOT ask for more information on optional parameters if it is not provided.
 
 """
-
 
 def update_system_prompt(current_iteration=None, max_iterations=None):
     global system_prompt
@@ -524,6 +527,12 @@ def chat_with_claude(user_input, image_path=None, current_iteration=None, max_it
 
 def main():
     global automode
+    
+    # Check if API keys are set
+    if not os.getenv("ANTHROPIC_API_KEY") or not os.getenv("TAVILY_API_KEY"):
+        print_colored("Error: API keys are not set. Please set ANTHROPIC_API_KEY and TAVILY_API_KEY environment variables.", TOOL_COLOR)
+        return
+
     print_colored("Welcome to the Claude-3.5-Sonnet Engineer Chat with Image Support!", CLAUDE_COLOR)
     print_colored("Type 'exit' to end the conversation.", CLAUDE_COLOR)
     print_colored("Type 'image' to include an image in your message.", CLAUDE_COLOR)
